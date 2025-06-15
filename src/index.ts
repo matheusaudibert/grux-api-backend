@@ -44,7 +44,7 @@ client.on("interactionCreate", async (interaction) => {
   // Check if in correct channel
   if (interaction.channelId !== process.env.DISCORD_REGISTER_CHANNEL_ID) {
     await interaction.reply({
-      content: "This command can only be used in the registration channel!",
+      content: `This command can only be used in <#${process.env.DISCORD_REGISTER_CHANNEL_ID}> channel!`,
       ephemeral: true,
     });
     return;
