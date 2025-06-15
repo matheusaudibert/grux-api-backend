@@ -5,7 +5,7 @@ import {
 } from "discord.js";
 import { UserService } from "../../services/UserService";
 
-const userService = new UserService();
+const userService = UserService.getInstance();
 
 export const registerCommand = {
   data: new SlashCommandBuilder()
@@ -19,7 +19,7 @@ export const registerCommand = {
       const user = interaction.user;
 
       // Check if user already exists
-      const existingUser = await userService.getUserByDiscordId(user.id);
+      const existingUser = await userService.getUserById(user.id);
 
       if (existingUser) {
         const embed = new EmbedBuilder()
@@ -31,7 +31,7 @@ export const registerCommand = {
         return;
       }
 
-      const registeredUser = await userService.registerUser(user.id);
+      const registeredUser = await userService.createOrUpdateUser(user.id);
 
       const embed = new EmbedBuilder()
         .setTitle("User Registered")
