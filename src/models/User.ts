@@ -21,11 +21,19 @@ export interface IClan {
   badge: string | null;
 }
 
+export interface IConnectedAccount {
+  type: string;
+  id: string;
+  name: string;
+  verified: boolean;
+}
+
 export interface IUser extends Document {
   _id: string;
   nameplate: INameplate | null;
   badges: IBadge[];
   clan: IClan | null;
+  connected_accounts: IConnectedAccount[];
   lastUpdated: Date;
   createdAt: Date;
 }
@@ -60,12 +68,23 @@ const ClanSchema: Schema = new Schema(
   { _id: false }
 );
 
+const ConnectedAccountSchema: Schema = new Schema(
+  {
+    type: { type: String, required: true },
+    id: { type: String, required: true },
+    name: { type: String, required: true },
+    verified: { type: Boolean, required: true },
+  },
+  { _id: false }
+);
+
 const UserSchema: Schema = new Schema(
   {
     _id: { type: String, required: true },
     nameplate: { type: NameplateSchema, default: null },
     badges: { type: [BadgeSchema], default: [] },
     clan: { type: ClanSchema, default: null },
+    connected_accounts: { type: [ConnectedAccountSchema], default: [] },
     lastUpdated: { type: Date, default: Date.now },
     createdAt: { type: Date, default: Date.now },
   },
