@@ -1,106 +1,104 @@
-import User, {
-  IUser,
-  IBadge,
-  INameplate,
-  IClan,
-  IConnectedAccount,
-} from "../models/User";
+import User, { IUser, IBadge, INameplate, IClan } from "../models/User";
 import { DiscordApiService } from "./DiscordApiService";
 
 export class UserService {
-  private static instance: UserService;
-  private discordApi: DiscordApiService;
+  private discordApi = DiscordApiService.getInstance();
 
-  private constructor() {
-    this.discordApi = DiscordApiService.getInstance();
-  }
-
-  public static getInstance(): UserService {
-    if (!UserService.instance) {
-      UserService.instance = new UserService();
-    }
-    return UserService.instance;
-  }
-
-  public async getUserById(userId: string): Promise<IUser | null> {
-    return await User.findById(userId);
-  }
-
-  public async createOrUpdateUser(userId: string): Promise<IUser> {
+  public async registerUser(discordId: string): Promise<IUser> {
     try {
-      const profileData = await this.discordApi.getUserProfile(userId);
+      let user = await User.findById(discordId);
 
-      const userData = {
-        _id: userId,
-        nameplate: this.extractNameplate(profileData),
-        badges: this.extractBadges(profileData),
-        clan: this.extractClan(profileData),
-        connected_accounts: this.extractConnectedAccounts(profileData),
-        lastUpdated: new Date(),
-      };
+      if (user) {
+        console.log(`User ${discordId} already registered, updating...`);
+        return await this.updateUserProfile(user);
+      }
 
-      const user = await User.findByIdAndUpdate(userId, userData, {
-        new: true,
-        upsert: true,
-        setDefaultsOnInsert: true,
-      });
+      user = new User({ _id: discordId });
+      await this.updateUserProfile(user);
 
-      return user!;
+      console.log(`User ${discordId} registered successfully`);
+      return user;
     } catch (error) {
-      throw new Error(`Failed to create or update user: ${error}`);
+      console.error(`Error registering user ${discordId}:`, error);
+      throw error;
     }
   }
 
-  private extractNameplate(profileData: any): INameplate | null {
-    const nameplate = profileData?.user?.collectibles?.nameplate;
-    if (!nameplate) return null;
+  public async updateUserProfile(user: IUser): Promise<IUser> {
+    try {
+      // Buscar apenas dados do perfil (funciona com user tokens)
+      const profileData = await this.discordApi.getUserProfile(user._id);
 
-    return {
-      sku_id: nameplate.sku_id || "",
-      asset: nameplate.asset || "",
-      label: nameplate.label || "",
-      palette: nameplate.palette || "",
-    };
+      // Extrair badges
+      const badges: IBadge[] = (profileData.badges || []).map((badge: any) => ({
+        id: badge.id,
+        description: badge.description,
+        icon: badge.icon,
+        link: badge.link || null,
+      }));
+
+      // Extrair nameplate do user (dentro do profileData)
+      let nameplate: INameplate | null = null;
+      if (profileData.user?.collectibles?.nameplate) {
+        const np = profileData.user.collectibles.nameplate;
+        nameplate = {
+          sku_id: np.sku_id,
+          asset: np.asset,
+          label: np.label,
+          palette: np.palette,
+        };
+      }
+
+      // Extrair clan do user
+      let clan: IClan | null = null;
+      if (profileData.user?.clan) {
+        clan = {
+          identity_guild_id: profileData.user.clan.identity_guild_id,
+          identity_enabled: profileData.user.clan.identity_enabled,
+          tag: profileData.user.clan.tag,
+          badge: profileData.user.clan.badge,
+        };
+      }
+
+      // Extrair contas conectadas
+      const connectedAccounts = profileData.connected_accounts || [];
+
+      // Atualizar usuário
+      user.badges = badges;
+      user.nameplate = nameplate;
+      user.clan = clan;
+      user.connectedAccounts = connectedAccounts; // Adicionando contas conectadas
+      user.lastUpdated = new Date();
+
+      await user.save();
+
+      return user;
+    } catch (error) {
+      user.lastUpdated = new Date();
+      await user.save();
+      throw error;
+    }
   }
 
-  private extractBadges(profileData: any): IBadge[] {
-    const badges = profileData?.badges || [];
-    return badges.map((badge: any) => ({
-      id: badge.id,
-      description: badge.description,
-      icon: badge.icon,
-      link: badge.link || null,
-    }));
+  public async updateAllUsers(): Promise<void> {
+    const users = await User.find();
+    console.log(`Starting update for ${users.length} users...`);
+
+    for (const user of users) {
+      try {
+        await this.updateUserProfile(user);
+
+        // Delay between requests to avoid rate limit
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      } catch (error) {
+        console.error(`Error updating ${user._id}:`, error);
+      }
+    }
+
+    console.log("Update completed!");
   }
 
-  private extractClan(profileData: any): IClan | null {
-    const clan = profileData?.user?.clan;
-    if (!clan) return null;
-
-    return {
-      identity_guild_id: clan.identity_guild_id || null,
-      identity_enabled: clan.identity_enabled || false,
-      tag: clan.tag || null,
-      badge: clan.badge || null,
-    };
-  }
-
-  private extractConnectedAccounts(profileData: any): IConnectedAccount[] {
-    const connectedAccounts = profileData?.connected_accounts || [];
-    return connectedAccounts.map((account: any) => ({
-      type: account.type,
-      id: account.id,
-      name: account.name,
-      verified: account.verified,
-    }));
-  }
-
-  public async getAllUsers(): Promise<IUser[]> {
-    return await User.find();
-  }
-
-  public async deleteUser(userId: string): Promise<boolean> {
-    const result = await User.findByIdAndDelete(userId);
-    return !!result;
+  public async getUserByDiscordId(discordId: string): Promise<IUser | null> {
+    return await User.findById(discordId);
   }
 }

@@ -37,7 +37,6 @@ export class DiscordApiService {
     return token;
   }
 
-  // Busca perfil com tokens de usuário (OAuth2)
   public async getUserProfile(userId: string): Promise<any> {
     const maxRetries = this.tokens.length;
     let attempts = 0;

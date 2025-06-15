@@ -5,7 +5,7 @@ import {
 } from "discord.js";
 import { UserService } from "../../services/UserService";
 
-const userService = UserService.getInstance();
+const userService = new UserService();
 
 export const registerCommand = {
   data: new SlashCommandBuilder()
@@ -13,13 +13,13 @@ export const registerCommand = {
     .setDescription("Register your profile"),
 
   async execute(interaction: CommandInteraction) {
-    await interaction.deferReply({ ephemeral: false });
+    await interaction.deferReply({ ephemeral: true });
 
     try {
       const user = interaction.user;
 
       // Check if user already exists
-      const existingUser = await userService.getUserById(user.id);
+      const existingUser = await userService.getUserByDiscordId(user.id);
 
       if (existingUser) {
         const embed = new EmbedBuilder()
@@ -31,12 +31,12 @@ export const registerCommand = {
         return;
       }
 
-      const registeredUser = await userService.createOrUpdateUser(user.id);
+      const registeredUser = await userService.registerUser(user.id);
 
       const embed = new EmbedBuilder()
         .setTitle("User Registered")
         .setDescription(
-          `<@${user.id}> has been successfully registered in the system.\n\nYou can now use the [**Lunar API**](https://newsletterbot.audibert.dev).`
+          `<@${user.id}> has been successfully registered in the system.\nYou can now use the [**Grux API**](https://newsletterbot.audibert.dev).`
         )
         .setTimestamp();
 
