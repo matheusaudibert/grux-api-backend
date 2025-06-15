@@ -1,5 +1,11 @@
 import dotenv from "dotenv";
-import { Client, GatewayIntentBits, REST, Routes } from "discord.js";
+import {
+  Client,
+  GatewayIntentBits,
+  ActivityType,
+  REST,
+  Routes,
+} from "discord.js";
 import { connectDatabase } from "./database/connection";
 import { startUpdateScheduler } from "./scheduler/updateScheduler";
 import { registerCommand } from "./bot/commands/register";
@@ -35,6 +41,17 @@ async function deployCommands() {
 
 client.once("ready", async () => {
   console.log(`Bot connected as ${client.user?.tag}`);
+
+  client.user?.setPresence({
+    activities: [
+      {
+        name: "server updates",
+        type: ActivityType.Watching,
+      },
+    ],
+    status: "online",
+  });
+
   await deployCommands();
 });
 
