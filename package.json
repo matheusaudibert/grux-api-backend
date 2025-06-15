@@ -6,13 +6,14 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
-    "start": "node dist/src/index.js",
+    "start": "npm run build && node dist/index.js",
     "start:dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "bot": "ts-node-dev --respawn --transpile-only src/bot/index.ts",
     "test-db": "ts-node src/scripts/testConnection.ts"
   },
   "dependencies": {
     "axios": "^1.10.0",
+    "typescript": "^5.3.3",
     "cors": "^2.8.5",
     "discord.js": "^14.19.3",
     "dotenv": "^16.5.0",
