@@ -13,7 +13,7 @@ export const registerCommand = {
     .setDescription("Register your profile"),
 
   async execute(interaction: CommandInteraction) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ ephemeral: false });
 
     try {
       const user = interaction.user;
