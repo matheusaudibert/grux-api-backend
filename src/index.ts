@@ -62,7 +62,7 @@ client.on("interactionCreate", async (interaction) => {
   // Check if in correct channel
   if (interaction.channelId !== process.env.DISCORD_REGISTER_CHANNEL_ID) {
     const embed = new EmbedBuilder().setDescription(
-      `This command can only be used in <#${process.env.DISCORD_REGISTER_CHANNEL_ID}> channel!`
+      `This command can only be used in <#${process.env.DISCORD_REGISTER_CHANNEL_ID}> channel.`
     );
 
     await interaction.reply({
