@@ -5,6 +5,7 @@ import {
   ActivityType,
   REST,
   Routes,
+  EmbedBuilder,
 } from "discord.js";
 import { connectDatabase } from "./database/connection";
 import { startUpdateScheduler } from "./scheduler/updateScheduler";
@@ -60,8 +61,12 @@ client.on("interactionCreate", async (interaction) => {
 
   // Check if in correct channel
   if (interaction.channelId !== process.env.DISCORD_REGISTER_CHANNEL_ID) {
+    const embed = new EmbedBuilder().setDescription(
+      `This command can only be used in <#${process.env.DISCORD_REGISTER_CHANNEL_ID}> channel!`
+    );
+
     await interaction.reply({
-      content: `This command can only be used in <#${process.env.DISCORD_REGISTER_CHANNEL_ID}> channel!`,
+      embeds: [embed],
       ephemeral: true,
     });
     return;
