@@ -11,6 +11,7 @@ export const connectDatabase = async (): Promise<void> => {
       retryWrites: true,
       w: "majority",
     });
+    console.log("MongoDB connected.");
   } catch (error) {
     console.error("Failed to connect to MongoDB:", error);
     process.exit(1);

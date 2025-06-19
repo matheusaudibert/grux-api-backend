@@ -118,6 +118,7 @@ export class UserService {
     for (const user of users) {
       try {
         await this.updateUserProfile(user);
+        console.log(`Updated user ${user._id}`);
 
         await new Promise((resolve) => setTimeout(resolve, 2000));
       } catch (error) {

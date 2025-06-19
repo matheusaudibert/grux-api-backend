@@ -5,7 +5,6 @@ import {
   ActivityType,
   REST,
   Routes,
-  EmbedBuilder,
 } from "discord.js";
 import { connectDatabase } from "./database/connection";
 import { startUpdateScheduler } from "./scheduler/updateScheduler";
@@ -27,26 +26,24 @@ const client = new Client({
 
 const userService = new UserService();
 
-async function deployCommands() {
-  const commands = [addCommand.data.toJSON(), deleteCommand.data.toJSON()];
+const commands = [addCommand, deleteCommand];
 
+async function deployCommands() {
   const rest = new REST().setToken(process.env.DISCORD_BOT_TOKEN!);
 
+  const slashCommands = commands.map((cmd) => cmd.data.toJSON());
+
   try {
-    await rest.put(
-      Routes.applicationGuildCommands(
-        client.user!.id,
-        process.env.DISCORD_GUILD_ID!
-      ),
-      { body: commands }
-    );
+    await rest.put(Routes.applicationCommands(client.user!.id), {
+      body: slashCommands,
+    });
   } catch (error) {
     console.error("Error registering commands:", error);
   }
 }
 
 client.once("ready", async () => {
-  console.log(`Bot connected as ${client.user?.tag}`);
+  console.log(`Bot connected as ${client.user?.tag}.`);
 
   client.user?.setPresence({
     activities: [
@@ -65,11 +62,26 @@ client.on("guildMemberAdd", async (member) => {
   if (member.user.bot) return;
   try {
     const exists = await userService.getUserByDiscordId(member.user.id);
+    console.log(
+      `User ${member.user.tag} (${member.user.id}) was added to the system.`
+    );
     if (!exists) {
       await userService.registerUser(member.user.id);
     }
   } catch (err) {
     console.error("Error registering member:", err);
+  }
+});
+
+client.on("guildMemberRemove", async (member) => {
+  if (member.user.bot) return;
+  try {
+    await userService.deleteUserByDiscordId(member.user.id);
+    console.log(
+      `User ${member.user.tag} (${member.user.id}) was removed from the system.`
+    );
+  } catch (err) {
+    console.error(`Error deleting user ${member.user.id}:`, err);
   }
 });
 
