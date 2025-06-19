@@ -33,9 +33,9 @@ export interface IUser extends Document {
   nameplate: INameplate | null;
   badges: IBadge[];
   clan: IClan | null;
+  connectedAccounts?: IConnectedAccount[];
   lastUpdated: Date;
   createdAt: Date;
-  connectedAccounts?: IConnectedAccount[]; // Novo campo
 }
 
 const BadgeSchema: Schema = new Schema(
@@ -74,8 +74,6 @@ const UserSchema: Schema = new Schema(
     nameplate: { type: NameplateSchema, default: null },
     badges: { type: [BadgeSchema], default: [] },
     clan: { type: ClanSchema, default: null },
-    lastUpdated: { type: Date, default: Date.now },
-    createdAt: { type: Date, default: Date.now },
     connectedAccounts: [
       {
         type: {
@@ -96,6 +94,8 @@ const UserSchema: Schema = new Schema(
         },
       },
     ],
+    lastUpdated: { type: Date, default: Date.now },
+    createdAt: { type: Date, default: Date.now },
   },
   {
     _id: false,

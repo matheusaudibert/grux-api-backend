@@ -49,7 +49,7 @@ export class DiscordApiService {
           `https://discord.com/api/v10/users/${userId}/profile`,
           {
             headers: {
-              Authorization: token, // token de usuário OAuth2 (ex: "Bearer xyz...")
+              Authorization: token,
               "User-Agent":
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
             },
@@ -79,7 +79,6 @@ export class DiscordApiService {
     }
   }
 
-  // Busca informações básicas do usuário via token do bot
   public async getUserBasicInfo(userId: string): Promise<any> {
     if (!this.botToken) {
       throw new Error("Bot token is not configured");

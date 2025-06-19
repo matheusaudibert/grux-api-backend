@@ -9,7 +9,9 @@ import {
 } from "discord.js";
 import { connectDatabase } from "./database/connection";
 import { startUpdateScheduler } from "./scheduler/updateScheduler";
-import { registerCommand } from "./bot/commands/register";
+import { addCommand } from "./bot/commands/add";
+import { deleteCommand } from "./bot/commands/delete";
+import { UserService } from "./services/UserService";
 
 dotenv.config();
 
@@ -17,13 +19,16 @@ const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildPresences,
     GatewayIntentBits.MessageContent,
   ],
 });
 
-// Register slash commands
+const userService = new UserService();
+
 async function deployCommands() {
-  const commands = [registerCommand.data.toJSON()];
+  const commands = [addCommand.data.toJSON(), deleteCommand.data.toJSON()];
 
   const rest = new REST().setToken(process.env.DISCORD_BOT_TOKEN!);
 
@@ -56,38 +61,37 @@ client.once("ready", async () => {
   await deployCommands();
 });
 
-client.on("interactionCreate", async (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
-
-  // Check if in correct channel
-  if (interaction.channelId !== process.env.DISCORD_REGISTER_CHANNEL_ID) {
-    const embed = new EmbedBuilder().setDescription(
-      `This command can only be used in <#${process.env.DISCORD_REGISTER_CHANNEL_ID}> channel.`
-    );
-
-    await interaction.reply({
-      embeds: [embed],
-      ephemeral: true,
-    });
-    return;
-  }
-
-  if (interaction.commandName === "register") {
-    await registerCommand.execute(interaction);
+client.on("guildMemberAdd", async (member) => {
+  if (member.user.bot) return;
+  try {
+    const exists = await userService.getUserByDiscordId(member.user.id);
+    if (!exists) {
+      await userService.registerUser(member.user.id);
+    }
+  } catch (err) {
+    console.error("Error registering member:", err);
   }
 });
 
-// Main function
+client.on("interactionCreate", async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
+
+  if (interaction.commandName === "add") {
+    await addCommand.execute(interaction);
+    return;
+  }
+  if (interaction.commandName === "delete") {
+    await deleteCommand.execute(interaction);
+    return;
+  }
+});
+
 async function main() {
   try {
-    console.log("Starting system...");
-    // Connect to database
     await connectDatabase();
 
-    // Start Discord bot
     await client.login(process.env.DISCORD_BOT_TOKEN);
 
-    // Start update scheduler
     startUpdateScheduler();
   } catch (error) {
     console.error("Error starting system:", error);

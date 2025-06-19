@@ -10,7 +10,6 @@ export function startUpdateScheduler(): void {
   (async () => {
     try {
       await userService.updateAllUsers();
-      console.log("Updated successfully (initial run)");
     } catch (error) {
       console.error("Initial update error:", error);
     }
@@ -19,7 +18,6 @@ export function startUpdateScheduler(): void {
   cron.schedule(cronExpression, async () => {
     try {
       await userService.updateAllUsers();
-      console.log("Updated successfully (scheduled run)");
     } catch (error) {
       console.error("Scheduled update error:", error);
     }
