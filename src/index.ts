@@ -48,7 +48,7 @@ client.once("ready", async () => {
   client.user?.setPresence({
     activities: [
       {
-        name: "monitoring users",
+        name: "users",
         type: ActivityType.Watching,
       },
     ],
