@@ -48,11 +48,11 @@ client.once("ready", async () => {
   client.user?.setPresence({
     activities: [
       {
-        name: "server updates",
+        name: "monitoring users",
         type: ActivityType.Watching,
       },
     ],
-    status: "online",
+    status: "idle",
   });
 
   await deployCommands();
